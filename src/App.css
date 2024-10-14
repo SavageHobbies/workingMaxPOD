@@ -1,0 +1,221 @@
+/* Combined CSS */
+.App {
+  text-align: center;
+  font-family: Arial, sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.App-header h1 {
+  margin: 0;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.product-selection,
+.thumbnail-selection,
+.design-upload,
+.mockup-display,
+.generated-mockups {
+  background-color: #9cf3cb;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+select, input[type="file"], button {
+  margin: 10px 0;
+  padding: 10px;
+  font-size: 16px;
+}
+
+.error-message {
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.thumbnail-grid, .design-grid, .mockup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.thumbnail-item, .design-item, .mockup-item {
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.thumbnail-item.selected {
+  border: 4px solid #e6e92e; /* Bright yellow border */
+  box-shadow: 
+    0 0 0 1px black, /* Inner black border */
+    0 0 0 5px #e6e92e, /* Outer yellow border */
+    0 0 10px rgba(230, 233, 46, 0.5); /* Yellow glow effect */
+  outline: 1px solid black; /* Outermost black border */
+}
+
+
+.thumbnail-item img, .design-item img, .mockup-item img {
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+}
+
+.generate-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+.generate-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.loading-robot {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.mockup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.mockup-item {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+  background-color: white;
+}
+
+.mockup-image-container {
+  position: relative;
+  width: 100%;
+  padding-top: 100%; /* 1:1 aspect ratio */
+  overflow: hidden;
+}
+
+.mockup-image, .design-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mockup-item p {
+  margin: 5px 0;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+.design-overlay {
+  mix-blend-mode: multiply;
+}
+
+.design-note {
+  font-style: italic;
+  color: #666;
+}
+
+.design-upload {
+  background-color: #9cf3cb;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.design-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+  background-color: #333;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.design-item {
+  background-color: #585454;
+  padding: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.design-item img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  background-color: white;
+  background-image: 
+    linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+    linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+    linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+.design-item p {
+  color: white;
+  margin-top: 10px;
+  font-size: 12px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
