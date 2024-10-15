@@ -15,7 +15,6 @@ function App() {
   const [error, setError] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedMockups, setGeneratedMockups] = useState([]);
-  const [designs, setDesigns] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessingDesigns, setIsProcessingDesigns] = useState(false);
 
@@ -69,7 +68,24 @@ function App() {
     try {
       const newDesigns = await Promise.all(files.map(async (file) => {
         const preview = await createTransparentPreview(file);
-        return { file, preview };
+        
+        // Get a pre-signed URL from your backend
+        const response = await fetch('https://843b52youc.execute-api.us-east-2.amazonaws.com/Production/get-upload-url', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ fileName: file.name }),
+        });
+        const { uploadUrl } = await response.json();
+  
+        // Upload the file to S3
+        await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+        });
+  
+        return { file: { name: file.name }, preview };
       }));
       setUploadedDesigns(newDesigns);
       setStep(3);
@@ -106,43 +122,45 @@ function App() {
     });
   };
 
-  const handleGenerateMockups = () => {
+  const handleGenerateMockups = async () => {
     if (selectedThumbnails.length > 0 && uploadedDesigns.length > 0) {
       setIsGenerating(true);
-      // This should be an API call to your backend service
-      simulateBackendMockupGeneration(selectedThumbnails, uploadedDesigns, selectedCategory)
-        .then((generatedMockups) => {
-          setGeneratedMockups(generatedMockups);
-          setIsGenerating(false);
-          setStep(4);
-        })
-        .catch((error) => {
-          console.error("Error generating mockups:", error);
-          setIsGenerating(false);
-        });
+      try {
+        const generatedMockups = await generateMockups(selectedThumbnails, uploadedDesigns, selectedCategory);
+        setGeneratedMockups(generatedMockups);
+        setIsGenerating(false);
+        setStep(4);
+      } catch (error) {
+        console.error("Error generating mockups:", error);
+        setError("Failed to generate mockups. Please try again.");
+        setIsGenerating(false);
+      }
     }
   };
   
+  const generateMockups = async (templates, designs, category) => {
+    try {
+      const response = await fetch('https://843b52youc.execute-api.us-east-2.amazonaws.com/Production/generate-mockup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          templates: templates,
+          designs: designs.map(d => d.file.name),
+          category: category
+        }),
+      });
   
-  // This function simulates what your backend should do
-  const simulateBackendMockupGeneration = (templates, designs, category) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const mockups = [];
-        templates.forEach((template, tIndex) => {
-          designs.forEach((design, dIndex) => {
-            mockups.push({
-              id: `${tIndex}-${dIndex}`,
-              templateUrl: `https://printify.trendsetterz.buzz/mockups/${category}/${template}`,
-              designUrl: design.preview,
-              templateName: `Template ${tIndex + 1}`,
-              designName: design.file.name
-            });
-          });
-        });
-        resolve(mockups);
-      }, 3000);
-    });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      return await response.json();
+    } catch (error) {
+      console.error("Error generating mockups:", error);
+      throw error;
+    }
   };
 
   return (
@@ -177,8 +195,6 @@ function App() {
               </section>
             )}
 
-            {error && <p className="error-message">{error}</p>}
-
             {step >= 2 && step < 4 && (
               <section className="design-upload">
                 <h2>Upload Designs for {selectedCategory}</h2>
@@ -211,8 +227,6 @@ function App() {
                 )}
               </section>
             )}
-
-
             {step === 3 && selectedCategory && (
               <section className="thumbnail-selection">
                 <h3>Select up to 10 templates for {selectedCategory}</h3>
@@ -259,8 +273,7 @@ function App() {
                   {generatedMockups.map((mockup) => (
                     <div key={mockup.id} className="mockup-item">
                       <div className="mockup-image-container">
-                        <img src={mockup.templateUrl} alt={`Template ${mockup.templateName}`} className="mockup-image" />
-                        <img src={mockup.designUrl} alt={`Design ${mockup.designName}`} className="design-overlay" />
+                        <img src={`https://max-pod-designs.s3.amazonaws.com/${mockup.mockupKey}`} alt={`Template ${mockup.templateName}`} className="mockup-image" />
                       </div>
                       <p>Template: {mockup.templateName}</p>
                       <p>Design: {mockup.designName}</p>
