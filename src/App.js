@@ -49,6 +49,21 @@ function App() {
     }
   };
 
+  const callApiGateway = async (endpoint, method, body) => {
+    const response = await fetch(`https://843b52youc.execute-api.us-east-2.amazonaws.com/Production/${endpoint}`, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  };
+  
+
   const handleCategoryChange = (e) => {
     setSelectedCategory(e.target.value);
     setSelectedThumbnails([]);
@@ -69,7 +84,14 @@ function App() {
     try {
       const newDesigns = await Promise.all(files.map(async (file) => {
         const preview = await createTransparentPreview(file);
-        return { file, preview };
+        // Get a pre-signed URL from your backend
+        const { uploadUrl } = await callApiGateway('get-upload-url', 'POST', { fileName: file.name });
+        // Upload the file to S3
+        await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+        });
+        return { file: { name: file.name }, preview };
       }));
       setUploadedDesigns(newDesigns);
       setStep(3);
@@ -80,6 +102,7 @@ function App() {
       setIsProcessingDesigns(false);
     }
   };
+  
   
   const createTransparentPreview = (file) => {
     return new Promise((resolve) => {
@@ -106,22 +129,26 @@ function App() {
     });
   };
 
-  const handleGenerateMockups = () => {
+  const handleGenerateMockups = async () => {
     if (selectedThumbnails.length > 0 && uploadedDesigns.length > 0) {
       setIsGenerating(true);
-      // This should be an API call to your backend service
-      simulateBackendMockupGeneration(selectedThumbnails, uploadedDesigns, selectedCategory)
-        .then((generatedMockups) => {
-          setGeneratedMockups(generatedMockups);
-          setIsGenerating(false);
-          setStep(4);
-        })
-        .catch((error) => {
-          console.error("Error generating mockups:", error);
-          setIsGenerating(false);
+      try {
+        const mockups = await callApiGateway('generate-mockup', 'POST', {
+          templates: selectedThumbnails,
+          designs: uploadedDesigns.map(d => d.file.name),
+          category: selectedCategory
         });
+        setGeneratedMockups(mockups);
+        setIsGenerating(false);
+        setStep(4);
+      } catch (error) {
+        console.error("Error generating mockups:", error);
+        setError("Failed to generate mockups. Please try again.");
+        setIsGenerating(false);
+      }
     }
   };
+  
   
   
   // This function simulates what your backend should do
@@ -259,8 +286,7 @@ function App() {
                   {generatedMockups.map((mockup) => (
                     <div key={mockup.id} className="mockup-item">
                       <div className="mockup-image-container">
-                        <img src={mockup.templateUrl} alt={`Template ${mockup.templateName}`} className="mockup-image" />
-                        <img src={mockup.designUrl} alt={`Design ${mockup.designName}`} className="design-overlay" />
+                        <img src={`https://max-pod-designs.s3.amazonaws.com/${mockup.mockupKey}`} alt={`Template ${mockup.templateName}`} className="mockup-image" />
                       </div>
                       <p>Template: {mockup.templateName}</p>
                       <p>Design: {mockup.designName}</p>
